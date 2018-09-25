@@ -21,9 +21,28 @@ def get_dataset(path):
          
     return train_set, valid_set, test_set
 
+def plot_figures(figures, nrows = 1, ncols=1):
+    """Plot a dictionary of figures.
+    """
+
+    fig, axeslist = plt.subplots(ncols=ncols, nrows=nrows)
+    for ind,title in zip(range(len(figures)), figures):
+        axeslist.ravel()[ind].imshow(figures[title])
+        axeslist.ravel()[ind].set_title(title)
+        axeslist.ravel()[ind].set_axis_off()
+    plt.tight_layout() # optional
+
 if __name__ == "__main__":
     train_set, valid_set, test_set = get_dataset(LOCAL_DATASET_PATH)
-    plt.imshow(train_set[0][0].reshape((28, 28)))
+
+    number_of_im = 20
+    w=10
+    h=10
+    figures = {str(i)+":"+str(train_set[1][i]): train_set[0][i].reshape((28, 28)) for i in range(number_of_im) }
+    print(figures.keys())
+
+    plot_figures(figures, 5, 4)
+
     plt.show()
 
     
