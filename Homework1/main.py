@@ -3,7 +3,9 @@ import numpy as np
 import wget
 import scipy.misc
 import matplotlib.pyplot as plt
+
 from perceptron import Perceptron
+from classifier import Classifier
 
 MNIST_URL = "http://deeplearning.net/data/mnist/mnist.pkl.gz"
 LOCAL_DATASET_PATH = "../data/mnist.pkl.gz"
@@ -37,8 +39,15 @@ if __name__ == "__main__":
     train_set, valid_set, test_set = get_dataset(LOCAL_DATASET_PATH)
     # plt.imshow(train_set[0][0].reshape((28, 28)), interpolation='nearest')
     # plt.show()
-    perceptron0 = Perceptron(784, 0)
-    perceptron0.train(train_set, 0.0001, 10)
-    perceptron0.test(test_set)
+    train_set = [train_set[0][:100], train_set[1][:100]]
+    test_set = [test_set[0][:100], test_set[1][:100]]
+
+    perceptron = Perceptron(784, 1)
+    perceptron.train(train_set, 0.001, 10)
+    perceptron.test(test_set)
+
+    # classifier = Classifier()
+    # classifier.train(train_set, 0.0001, 10)
+    # classifier.test(test_set)
 
     
