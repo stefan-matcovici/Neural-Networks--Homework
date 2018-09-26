@@ -1,8 +1,11 @@
 import cPickle, gzip, os
-import numpy
+import numpy as np
 import wget
 import scipy.misc
 import matplotlib.pyplot as plt
+
+from perceptron import Perceptron
+from classifier import Classifier
 
 MNIST_URL = "http://deeplearning.net/data/mnist/mnist.pkl.gz"
 LOCAL_DATASET_PATH = "../data/mnist.pkl.gz"
@@ -27,22 +30,24 @@ def plot_figures(figures, nrows = 1, ncols=1):
 
     fig, axeslist = plt.subplots(ncols=ncols, nrows=nrows)
     for ind,title in zip(range(len(figures)), figures):
-        axeslist.ravel()[ind].imshow(figures[title])
+        axeslist.ravel()[ind].imshow(figures[title], cmap=plt.jet())
         axeslist.ravel()[ind].set_title(title)
         axeslist.ravel()[ind].set_axis_off()
     plt.tight_layout() # optional
 
 if __name__ == "__main__":
     train_set, valid_set, test_set = get_dataset(LOCAL_DATASET_PATH)
+    # plt.imshow(train_set[0][0].reshape((28, 28)), interpolation='nearest')
+    # plt.show()
+    train_set = [train_set[0][:100], train_set[1][:100]]
+    test_set = [test_set[0][:100], test_set[1][:100]]
 
-    number_of_im = 20
-    w=10
-    h=10
-    figures = {str(i)+":"+str(train_set[1][i]): train_set[0][i].reshape((28, 28)) for i in range(number_of_im) }
-    print(figures.keys())
+    perceptron = Perceptron(784, 1)
+    perceptron.train(train_set, 0.001, 10)
+    perceptron.test(test_set)
 
-    plot_figures(figures, 5, 4)
-
-    plt.show()
+    # classifier = Classifier()
+    # classifier.train(train_set, 0.0001, 10)
+    # classifier.test(test_set)
 
     
