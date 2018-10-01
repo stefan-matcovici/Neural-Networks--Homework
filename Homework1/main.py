@@ -39,15 +39,25 @@ if __name__ == "__main__":
     train_set, valid_set, test_set = get_dataset(LOCAL_DATASET_PATH)
     # plt.imshow(train_set[0][0].reshape((28, 28)), interpolation='nearest')
     # plt.show()
-    train_set = [train_set[0][:100], train_set[1][:100]]
-    test_set = [test_set[0][:100], test_set[1][:100]]
+    # train_set = [train_set[0][:100], train_set[1][:100]]
+    # test_set = [test_set[0][:100], test_set[1][:100]]
 
-    perceptron = Perceptron(784, 1)
-    perceptron.train(train_set, 0.001, 10)
-    perceptron.test(test_set)
+    # p = Perceptron(784, 7)
+    # p.train(train_set, 0.1, 5)
+    # p.test(test_set)
 
-    # classifier = Classifier()
-    # classifier.train(train_set, 0.0001, 10)
+    # perceptron.load("test")
+    # perceptron.test(test_set)
+
+    classifier = Classifier()
+    classifier.train(train_set, 0.001, 5)
+    classifier.save("working")
+    classifier.test(test_set)
+
+    # print(test_set[1][0])
+    # print(p.get_result(test_set[0][0]))
+    
     # classifier.test(test_set)
+
 
     

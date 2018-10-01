@@ -57,7 +57,7 @@ class Perceptron(object):
                     output = self.__activation__(z)
 
                 self.weights = np.add(
-                    self.weights, (target-output)*learning_rate*self.weights)
+                    self.weights, (target-output)*learning_rate*example)
                 self.bias = self.bias + (target-output)*learning_rate
 
                 if output != target:
@@ -91,4 +91,4 @@ class Perceptron(object):
             if output == target:
                 correct += 1
 
-        print((float(correct)/float(len(testing_set[0])))*100)
+        print((float(correct)/float(len(testing_set[1]))))

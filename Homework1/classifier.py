@@ -1,5 +1,7 @@
 from perceptron import Perceptron
 import numpy as np
+import datetime
+import cPickle
 
 class Classifier(object):
     def __init__(self):
@@ -29,10 +31,18 @@ class Classifier(object):
 
         for example, target in zip(testing_set[0], testing_set[1]):
             output = self.get_result(example)
-            print(output)
 
             if output == target:
                 correct += 1
 
-        print((float(correct)/float(len(testing_set[0])))*100)
+        print((float(correct)/float(len(testing_set[1])))*100)
+
+    def save(self, folder_name):
+        now = datetime.datetime.now()
+        with open(folder_name + str(now.day) + str(now.hour) + str(now.day), 'w+') as output:
+            cPickle.dump(self, output, cPickle.HIGHEST_PROTOCOL)
+
+    def load(self, file_name):
+        with open(file_name, 'rb') as input:
+            self = cPickle.load(input)
 
