@@ -1,4 +1,4 @@
-import cPickle, gzip, os
+import cPickle, gzip, os, sys
 import numpy as np
 import wget
 import scipy.misc
@@ -6,23 +6,7 @@ import matplotlib.pyplot as plt
 
 from perceptron import Perceptron
 from classifier import Classifier
-
-MNIST_URL = "http://deeplearning.net/data/mnist/mnist.pkl.gz"
-LOCAL_DATASET_PATH = "../data/mnist.pkl.gz"
-
-def get_dataset(path):
-    """Downloads the archive with the dataset if not present at the specified path.
-       Opens the archive and returns training set, validation set and testing set as a tuple
-    """
-
-    if not os.path.isfile(path) or not os.access(path, os.R_OK):
-        wget.download(MNIST_URL, path)
-
-    f = gzip.open(path, 'rb')
-    train_set, valid_set, test_set = cPickle.load(f)
-    f.close()
-         
-    return train_set, valid_set, test_set
+from repository import *
 
 def plot_figures(figures, nrows = 1, ncols=1):
     """Plot a dictionary of figures.
@@ -36,7 +20,7 @@ def plot_figures(figures, nrows = 1, ncols=1):
     plt.tight_layout() # optional
 
 if __name__ == "__main__":
-    train_set, valid_set, test_set = get_dataset(LOCAL_DATASET_PATH)
+    train_set, valid_set, test_set = get_dataset()
     # plt.imshow(train_set[0][0].reshape((28, 28)), interpolation='nearest')
     # plt.show()
     # train_set = [train_set[0][:100], train_set[1][:100]]
@@ -48,11 +32,13 @@ if __name__ == "__main__":
 
     # perceptron.load("test")
     # perceptron.test(test_set)
+    sys.path.append(os.path.abspath(os.path.curdir))
+    print(sys.path)
 
-    classifier = Classifier()
-    classifier.train(train_set, 0.001, 5)
-    classifier.save("working")
-    classifier.test(test_set)
+    # classifier.train(train_set, 0.001, 5)
+    # classifier.save("working")
+    classifier = load("working11447")
+    # classifier.test(test_set)
 
     # print(test_set[1][0])
     # print(p.get_result(test_set[0][0]))

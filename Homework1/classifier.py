@@ -37,12 +37,3 @@ class Classifier(object):
 
         print((float(correct)/float(len(testing_set[1])))*100)
 
-    def save(self, folder_name):
-        now = datetime.datetime.now()
-        with open(folder_name + str(now.day) + str(now.hour) + str(now.day), 'w+') as output:
-            cPickle.dump(self, output, cPickle.HIGHEST_PROTOCOL)
-
-    def load(self, file_name):
-        with open(file_name, 'rb') as input:
-            self = cPickle.load(input)
-
