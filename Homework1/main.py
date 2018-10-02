@@ -23,7 +23,7 @@ if __name__ == "__main__":
     train_set, valid_set, test_set = get_dataset()
     # plt.imshow(train_set[0][0].reshape((28, 28)), interpolation='nearest')
     # plt.show()
-    # train_set = [train_set[0][:100], train_set[1][:100]]
+    # train_set = [train_set[0][:10], train_set[1][:10]]
     # test_set = [test_set[0][:100], test_set[1][:100]]
 
     # p = Perceptron(784, 7)
@@ -32,13 +32,12 @@ if __name__ == "__main__":
 
     # perceptron.load("test")
     # perceptron.test(test_set)
-    sys.path.append(os.path.abspath(os.path.curdir))
-    print(sys.path)
 
+    classifier = Classifier()
     # classifier.train(train_set, 0.001, 5)
-    # classifier.save("working")
-    classifier = load("working11447")
-    # classifier.test(test_set)
+    # save("working", classifier)
+    classifier = load("working21618")
+    classifier.test(test_set)
 
     # print(test_set[1][0])
     # print(p.get_result(test_set[0][0]))

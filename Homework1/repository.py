@@ -1,6 +1,8 @@
 import gzip, cPickle, wget
 import datetime
-import os
+import os, sys
+import numpy as np
+from classifier import Classifier
 
 MNIST_URL = "http://deeplearning.net/data/mnist/mnist.pkl.gz"
 LOCAL_DATASET_PATH = "../data/mnist.pkl.gz"
@@ -21,9 +23,21 @@ def get_dataset():
 
 def save(model_name, classifier):
     now = datetime.datetime.now()
-    with open("models/" + model_name + str(now.day) + str(now.hour) + str(now.minute), 'w+') as output:
-        cPickle.dump(classifier, output, cPickle.HIGHEST_PROTOCOL)
+    data = np.array([])
+    
+    with open("models/" + model_name + str(now.day) + str(now.hour) + str(now.minute), 'wb') as output:
+        for perceptron in classifier.perceptrons:
+            data = np.append(data, [perceptron.weights, perceptron.bias])
+        print(data)
+        cPickle.dump(data, output, cPickle.HIGHEST_PROTOCOL)
 
 def load(file_name):
+    classifier = Classifier()
     with open("models/" + file_name, 'rb') as input:
-        print(cPickle.load(input))
+        data = cPickle.load(input)
+        i = 0
+        for perceptron in classifier.perceptrons:
+            perceptron.weights = data[i]
+            perceptron.bias = data[i+1]
+            i += 2
+    return classifier
