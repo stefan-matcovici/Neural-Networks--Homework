@@ -40,9 +40,13 @@ if __name__ == "__main__":
     # plt.imshow(train_set[0][0].reshape((28, 28)), interpolation='nearest')
     # plt.show()
 
+    train_set = trim_dataset(train_set, 10)
+    valid_set = trim_dataset(valid_set, 10)
+    test_set = trim_dataset(test_set, 10)
+
     classifier = Classifier()
     classifier.train(train_set, valid_set, 0.001, 10)
-    # save("working", classifier)
+    save("working", classifier)
     # classifier = load("working21618")
     # classifier.test(test_set)
 

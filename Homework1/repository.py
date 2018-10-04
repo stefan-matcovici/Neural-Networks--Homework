@@ -25,7 +25,7 @@ def save(model_name, classifier):
     now = datetime.datetime.now()
     data = np.array([])
     
-    with open("models/" + model_name + str(now.day) + str(now.hour) + str(now.minute), 'wb') as output:
+    with open(os.path.join("models", model_name + "-" + str(now.day) + "-" + str(now.hour) + "-" + str(now.minute)), 'wb') as output:
         for perceptron in classifier.perceptrons:
             data = np.append(data, [perceptron.weights, perceptron.bias])
         cPickle.dump(data, output, cPickle.HIGHEST_PROTOCOL)
