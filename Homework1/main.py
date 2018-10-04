@@ -8,6 +8,19 @@ from perceptron import Perceptron
 from classifier import Classifier
 from repository import *
 
+import logging
+
+root = logging.getLogger()
+root.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler(sys.stdout)
+ch.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+root.addHandler(ch)
+
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
 def plot_figures(figures, nrows = 1, ncols=1):
     """Plot a dictionary of figures.
     """
@@ -19,29 +32,18 @@ def plot_figures(figures, nrows = 1, ncols=1):
         axeslist.ravel()[ind].set_axis_off()
     plt.tight_layout() # optional
 
+def trim_dataset(dataset, size):
+    return [dataset[0][:size], dataset[1][:size]]
+
 if __name__ == "__main__":
     train_set, valid_set, test_set = get_dataset()
     # plt.imshow(train_set[0][0].reshape((28, 28)), interpolation='nearest')
     # plt.show()
-    # train_set = [train_set[0][:10], train_set[1][:10]]
-    # test_set = [test_set[0][:100], test_set[1][:100]]
-
-    # p = Perceptron(784, 7)
-    # p.train(train_set, 0.1, 5)
-    # p.test(test_set)
-
-    # perceptron.load("test")
-    # perceptron.test(test_set)
 
     classifier = Classifier()
-    # classifier.train(train_set, 0.001, 5)
+    classifier.train(train_set, valid_set, 0.001, 10)
     # save("working", classifier)
-    classifier = load("working21618")
-    classifier.test(test_set)
-
-    # print(test_set[1][0])
-    # print(p.get_result(test_set[0][0]))
-    
+    # classifier = load("working21618")
     # classifier.test(test_set)
 
 

@@ -2,6 +2,9 @@ from perceptron import Perceptron
 import numpy as np
 import datetime
 import cPickle
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Classifier(object):
     def __init__(self):
@@ -9,13 +12,17 @@ class Classifier(object):
         for i in range(10):
             self.perceptrons.append(Perceptron(784, i))
     
-    def train(self, training_set, learning_rate, no_iterations, adaline=False):
-        for perceptron in self.perceptrons:
-            perceptron.train(training_set, learning_rate, no_iterations, adaline)
+    def train(self, training_set, validation_set, learning_rate, no_iterations, adaline=False):
+        for index, perceptron in enumerate(self.perceptrons):
+            logger.info("Started training perceptron %d", index)
+            perceptron.train(training_set, validation_set, learning_rate, no_iterations, adaline)
+            logger.info("Ended training perceptron %d", index)
     
     def train_in_batches(self, training_set, learning_rate, no_iterations, no_batches, adaline=False):
-        for perceptron in self.perceptrons:
+        for index, perceptron in enumerate(self.perceptrons):
+            logger.info("Started training perceptron %d", index)
             perceptron.train_in_batches(training_set, learning_rate, no_iterations, no_batches, adaline)
+            logger.info("Ended training perceptron %d", index)
     
     def predict(self, sample):
         return np.argmax([perceptron.predict(sample) for perceptron in self.perceptrons])

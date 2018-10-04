@@ -1,5 +1,7 @@
 import numpy as np
+import logging
 
+logger = logging.getLogger(__name__)
 
 class Perceptron(object):
     def __init__(self, input_size, target_number):
@@ -42,11 +44,14 @@ class Perceptron(object):
             bias_adjustement = bias_adjustement + (target-output)*learning_rate
         return weight_adjustements, bias_adjustement
             
-    def train(self, training_set, learning_rate, no_iterations, adaline=False):
+    def train(self, training_set, validation_set, learning_rate, no_iterations, adaline=False):
         all_classified = False
+    
+        logger.info("Parameters: learning_rate=%f, no_iterations=%d, adaline=%s", learning_rate, no_iterations, adaline)
 
         while not all_classified and no_iterations > 0:
             all_classified = True
+            
             for example, target in zip(training_set[0], self.__get_target_array__(training_set[1])):
                 z = np.dot(self.weights, example) + self.bias
 
@@ -62,6 +67,7 @@ class Perceptron(object):
 
                 if output != target:
                     all_classified = False
+            logger.info("Iteration %d accuracy on validation set: %f", no_iterations, self.test(validation_set))
             no_iterations -= 1
 
     def train_in_batches(self, training_set, learning_rate, no_iterations, no_batches, adaline=False):
@@ -91,4 +97,4 @@ class Perceptron(object):
             if output == target:
                 correct += 1
 
-        print((float(correct)/float(len(testing_set[1]))))
+        return ((float(correct)/float(len(testing_set[1])))*100)
