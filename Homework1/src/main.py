@@ -9,6 +9,8 @@ from classifier import Classifier
 from repository import *
 
 import logging
+import argparse
+import math
 
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
@@ -36,18 +38,38 @@ def trim_dataset(dataset, size):
     return [dataset[0][:size], dataset[1][:size]]
 
 if __name__ == "__main__":
-    train_set, valid_set, test_set = get_dataset()
-    # plt.imshow(train_set[0][0].reshape((28, 28)), interpolation='nearest')
-    # plt.show()
+    parser = argparse.ArgumentParser(description='Train simple perceptrons to recognize handwritten digits.')
+    parser.add_argument('-lr', '--learning-rate', type=float, help='learning rate')
+    parser.add_argument('-ni', '--no-iterations', type=int, help='no of iterations')
+    parser.add_argument('-bz', '--batch-size', type=int, help='batch size')
+    parser.add_argument('-a', '--adaline', type=bool, help='enable adaline learning', default=False)
+    parser.add_argument('-t', '--trim', type=int, help='trim data set to size', default=0)
+    parser.add_argument('--save', help='save the model in a file', action="store_const", const=True)
+    parser.add_argument('--load', type=str, help='load the model from a file')
 
-    # train_set = trim_dataset(train_set, 10)
-    # valid_set = trim_dataset(valid_set, 10)
-    # test_set = trim_dataset(test_set, 10)
+    parse_result = parser.parse_args(sys.argv[1:])
+
+    train_set, valid_set, test_set = get_dataset()
+    # # plt.imshow(train_set[0][0].reshape((28, 28)), interpolation='nearest')
+    # # plt.show()
+
+    if parse_result.trim != 0:
+        train_set = trim_dataset(train_set, parse_result.trim)
+        valid_set = trim_dataset(valid_set, parse_result.trim)
+        test_set = trim_dataset(test_set, parse_result.trim)
 
     classifier = Classifier()
-    classifier.train_in_batches(train_set, valid_set, 0.01, 10, 15, True)
-    # save("working-1-10-batch", classifier)
-    # classifier = load("working-3-10-7-11-1")
+    if parse_result.batch_size is not None:
+        classifier.train_in_batches(train_set, valid_set, parse_result.learning_rate, parse_result.no_iterations, parse_result.batch_size, parse_result.adaline)
+    else:
+        classifier.train(train_set, valid_set, parse_result.learning_rate, parse_result.no_iterations, parse_result.adaline)
+
+    if parse_result.save:
+        save("model-"+str(abs(int(math.log10(0.001))))+"-"+ str(parse_result.no_iterations) + (("-"+str(parse_result.batch_size)) if parse_result.batch_size else "") + ("-adaline" if parse_result.adaline else ""), classifier)
+
+    if parse_result.load:
+        classifier = load(parse_result.load)
+
     classifier.test(test_set)
 
 
