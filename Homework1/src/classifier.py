@@ -18,11 +18,11 @@ class Classifier(object):
             perceptron.train(training_set, validation_set, learning_rate, no_iterations, adaline)
             logger.info("Ended training perceptron %d", index)
     
-    def train_in_batches(self, training_set, learning_rate, no_iterations, no_batches, adaline=False):
+    def train_in_batches(self, training_set, validation_set, learning_rate, no_iterations, batch_size, adaline=False):
         for index, perceptron in enumerate(self.perceptrons):
-            logger.info("Started training perceptron %d", index)
-            perceptron.train_in_batches(training_set, learning_rate, no_iterations, no_batches, adaline)
-            logger.info("Ended training perceptron %d", index)
+            logger.info("Started batch training perceptron %d", index)
+            perceptron.train_in_batches(training_set, validation_set, learning_rate, no_iterations, batch_size, adaline)
+            logger.info("Ended batch training perceptron %d", index)
     
     def predict(self, sample):
         return np.argmax([perceptron.predict(sample) for perceptron in self.perceptrons])

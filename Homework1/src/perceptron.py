@@ -20,10 +20,9 @@ class Perceptron(object):
     def __get_target_array__(self, input_array):
         return np.array([1 if target == self.target_number else 0 for target in input_array])
 
-    def __split_into_batches__(self, training_set, no_batches):
-        batch_size = len(training_set[0])/no_batches
-        sample_batches = np.split(training_set[0], range(len(training_set[0]), 0, batch_size))
-        sample_targets = np.split(training_set[1], range(len(training_set[1]), 0, batch_size))
+    def __split_into_batches__(self, training_set, batch_size):
+        sample_batches = np.split(training_set[0], range(batch_size, len(training_set[0]), batch_size))
+        sample_targets = np.split(training_set[1], range(batch_size, len(training_set[1]), batch_size))
 
         return zip(sample_batches, sample_targets)
 
@@ -40,7 +39,7 @@ class Perceptron(object):
                 output = self.__activation__(z)
 
             weight_adjustements = np.add(
-                weight_adjustements, (target-output)*learning_rate*self.weights)
+                weight_adjustements, (target-output)*learning_rate*example)
             bias_adjustement = bias_adjustement + (target-output)*learning_rate
         return weight_adjustements, bias_adjustement
             
@@ -70,16 +69,17 @@ class Perceptron(object):
             logger.info("Iteration %d accuracy on validation set: %f", no_iterations, self.test(validation_set))
             no_iterations -= 1
 
-    def train_in_batches(self, training_set, learning_rate, no_iterations, no_batches, adaline=False):
-        training_data = self.__split_into_batches__(training_set, no_batches)
-        batch_adjustements = []
+    def train_in_batches(self, training_set, validation_set, learning_rate, no_iterations, batch_size, adaline=False):
+        training_data = self.__split_into_batches__(training_set, batch_size)
         while no_iterations > 0:
+            batch_adjustements = []
             for batch in training_data:
                 weight_adjustements, bias_adjustement = self.__train_episode__(batch[0], batch[1], learning_rate, adaline)
                 batch_adjustements.append((weight_adjustements, bias_adjustement))
             for batch_adjustement in batch_adjustements:
                 self.weights = np.add(self.weights, batch_adjustement[0])
                 self.bias = self.bias + batch_adjustement[1]
+            logger.info("Iteration %d accuracy on validation set: %f", no_iterations, self.test(validation_set))
             no_iterations -= 1   
 
     def predict(self, sample):
