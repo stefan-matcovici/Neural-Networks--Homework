@@ -59,17 +59,18 @@ if __name__ == "__main__":
         test_set = trim_dataset(test_set, parse_result.trim)
 
     classifier = Classifier()
-    if parse_result.batch_size is not None:
-        classifier.train_in_batches(train_set, valid_set, parse_result.learning_rate, parse_result.no_iterations, parse_result.batch_size, parse_result.adaline)
-    else:
-        classifier.train(train_set, valid_set, parse_result.learning_rate, parse_result.no_iterations, parse_result.adaline)
-
-    if parse_result.save:
-        save("model-"+str(abs(int(math.log10(0.001))))+"-"+ str(parse_result.no_iterations) + (("-"+str(parse_result.batch_size)) if parse_result.batch_size else "") + ("-adaline" if parse_result.adaline else ""), classifier)
-
     if parse_result.load:
         classifier = load(parse_result.load)
+    else:
+        if parse_result.batch_size is not None:
+            classifier.train_in_batches(train_set, valid_set, parse_result.learning_rate, parse_result.no_iterations, parse_result.batch_size, parse_result.adaline)
+        else:
+            classifier.train(train_set, valid_set, parse_result.learning_rate, parse_result.no_iterations, parse_result.adaline)
 
+        if parse_result.save:
+            save("model-"+str(abs(int(math.log10(0.001))))+"-"+ str(parse_result.no_iterations) + (("-"+str(parse_result.batch_size)) if parse_result.batch_size else "") + ("-adaline" if parse_result.adaline else ""), classifier)
+
+    
     classifier.test(test_set)
 
 
