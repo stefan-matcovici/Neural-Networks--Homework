@@ -72,13 +72,10 @@ class Perceptron(object):
     def train_in_batches(self, training_set, validation_set, learning_rate, no_iterations, batch_size, adaline=False):
         training_data = self.__split_into_batches__(training_set, batch_size)
         while no_iterations > 0:
-            batch_adjustements = []
             for batch in training_data:
                 weight_adjustements, bias_adjustement = self.__train_episode__(batch[0], batch[1], learning_rate, adaline)
-                batch_adjustements.append((weight_adjustements, bias_adjustement))
-            for batch_adjustement in batch_adjustements:
-                self.weights = np.add(self.weights, batch_adjustement[0])
-                self.bias = self.bias + batch_adjustement[1]
+                self.weights = np.add(self.weights, weight_adjustements)
+                self.bias = self.bias + bias_adjustement
             logger.info("Iteration %d accuracy on validation set: %f", no_iterations, self.test(validation_set))
             no_iterations -= 1   
 
