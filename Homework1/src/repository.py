@@ -7,6 +7,12 @@ from classifier import Classifier
 MNIST_URL = "http://deeplearning.net/data/mnist/mnist.pkl.gz"
 LOCAL_DATASET_PATH = "../data/mnist.pkl.gz"
 
+def shuffle(data):
+    zipped_data = zip(*data)
+    np.random.shuffle(zipped_data)
+
+    return zip(*zipped_data)
+
 def get_dataset():
     """Downloads the archive with the dataset if not present at the specified path.
        Opens the archive and returns training set, validation set and testing set as a tuple
@@ -19,7 +25,7 @@ def get_dataset():
     train_set, valid_set, test_set = cPickle.load(f)
     f.close()
          
-    return train_set, valid_set, test_set
+    return shuffle(train_set), valid_set, test_set
 
 def save(model_name, classifier):
     now = datetime.datetime.now()
