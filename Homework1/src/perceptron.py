@@ -17,7 +17,9 @@ class Perceptron(object):
             return 1
         return 0
 
-    def __get_target_array__(self, input_array):
+    def __get_target_array__(self, input_array, adaline):
+        if adaline:
+            return np.array([1 if target == self.target_number else -1 for target in input_array])
         return np.array([1 if target == self.target_number else 0 for target in input_array])
 
     def __split_into_batches__(self, training_set, batch_size):
@@ -29,7 +31,7 @@ class Perceptron(object):
     def __train_episode__(self, samples, targets, learning_rate, adaline):
         weight_adjustements = np.zeros(samples[0].shape)
         bias_adjustement = 0
-        for example, target in zip(samples, self.__get_target_array__(targets)):
+        for example, target in zip(samples, self.__get_target_array__(targets, adaline)):
             z = np.dot(self.weights, example) + self.bias
 
             output = 0
@@ -51,7 +53,7 @@ class Perceptron(object):
         while not all_classified and no_iterations > 0:
             all_classified = True
             
-            for example, target in zip(training_set[0], self.__get_target_array__(training_set[1])):
+            for example, target in zip(training_set[0], self.__get_target_array__(training_set[1], adaline)):
                 z = np.dot(self.weights, example) + self.bias
 
                 output = 0
@@ -88,7 +90,7 @@ class Perceptron(object):
     def test(self, testing_set):
         correct = 0
 
-        for example, target in zip(testing_set[0], self.__get_target_array__(testing_set[1])):
+        for example, target in zip(testing_set[0], self.__get_target_array__(testing_set[1], False)):
             output = self.predict(example)
 
             if output == target:
