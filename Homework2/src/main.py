@@ -48,7 +48,7 @@ if __name__ == "__main__":
         valid_set = trim_dataset(valid_set, parse_result.trim)
         test_set = trim_dataset(test_set, parse_result.trim)
 
-    nnetwork = NeuralNetwork((784, 36, 10))
+    nnetwork = NeuralNetwork((784, 100, 36, 10))
     # for layer in nnetwork.weights:
     #     print(layer.shape)
     # for bias in nnetwork.biases:
