@@ -12,6 +12,10 @@ class NeuralNetwork(object):
     def __sigmoid__(self, x):
         return 1.0 / (1.0 + np.exp(-x))
 
+    def __softmax__(self, x):
+        all_sum = np.sum(np.exp(x))
+        return x / all_sum
+
     def __sigmoid_derivative__(self, x):
         return x * (1 - x)
 
@@ -22,6 +26,15 @@ class NeuralNetwork(object):
             error += np.sum((outputs[-1] - target) ** 2)
 
         return error / (2 * len(data[0]))
+
+    def __cross_entropy_error__(self, data):
+        error = 0
+        for sample, target in zip(*data):
+            outputs = self.__feedforward__(sample)
+            y = outputs[-1]
+            error += np.sum(target * np.log(y) + (1 - target) * np.log(1 - y))
+
+        return -error / (len(data[0]))
 
     def __initialize_model__(self, layers_sizes):
         self.weights = []
@@ -41,7 +54,10 @@ class NeuralNetwork(object):
         outputs = [x]
         for i, (w, b) in enumerate(zip(self.weights, self.biases)):
             input = outputs[i]
-            outputs.append(self.__sigmoid__(np.dot(self.weights[i], input) + self.biases[i]))
+            if i != len(self.layers_sizes):
+                outputs.append(self.__sigmoid__(np.dot(self.weights[i], input) + self.biases[i]))
+            else:
+                outputs.append(self.__softmax__(np.dot(self.weights[i], input) + self.biases[i]))
         return outputs
 
     def __train_batch__(self, batch, learning_rate):
@@ -57,7 +73,7 @@ class NeuralNetwork(object):
                 y = outputs[layer]
                 if layer == self.no_layers:
                     # last layer
-                    error = self.__sigmoid_derivative__(y) * (y - target)
+                    error = y - target
                 else:
                     error = self.__sigmoid_derivative__(y) * np.transpose(np.dot(error.T, self.weights[layer]))
 
@@ -71,7 +87,7 @@ class NeuralNetwork(object):
 
         return weights_adjustements, bias_adjustments
 
-    def train(self, training_set, valid_set, learning_rate, no_iterations, batch_size):
+    def train(self, training_set, valid_set, learning_rate, no_iterations, batch_size, ):
 
         errors = []
 
@@ -81,14 +97,15 @@ class NeuralNetwork(object):
             for batch in batches:
                 weight_adjustements, bias_adjustements = self.__train_batch__(batch, learning_rate)
                 for j, (w, adjust) in enumerate(zip(self.weights, weight_adjustements)):
-                    self.weights[j] = np.add(w, -(learning_rate / batch_size) * adjust)
+                    self.weights[j] = w - (learning_rate / batch_size) * adjust
 
                 for j, (b, adjust) in enumerate(zip(self.biases, bias_adjustements)):
-                    self.biases[j] = np.add(b, -(learning_rate / batch_size) * adjust)
+                    self.biases[j] = b - (learning_rate / batch_size) * adjust
 
-            error = self.__mse_error__(training_set)
+            error = self.__cross_entropy_error__(training_set)
+            print(error)
             errors.append(error)
-            plt.ylim(0, 0.1)
+            plt.ylim(0, 1)
             plt.xlim(0, 10)
             plt.plot(errors)
             plt.show()
