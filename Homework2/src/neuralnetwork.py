@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+from timeit import default_timer as timer
 
 
 class NeuralNetwork(object):
@@ -40,9 +40,9 @@ class NeuralNetwork(object):
         self.weights = []
         self.biases = []
 
-        self.weights = [np.random.randn(y, x) / np.sqrt(x)
-                        for x, y in zip(self.layers_sizes[:-1], self.layers_sizes[1:])]
-        self.biases = [np.random.randn(y, 1) for y in self.layers_sizes[1:]]
+        self.weights = np.array([np.random.randn(y, x) / np.sqrt(x)
+                                 for x, y in zip(self.layers_sizes[:-1], self.layers_sizes[1:])])
+        self.biases = np.array([np.random.randn(y, 1) for y in self.layers_sizes[1:]])
 
     def __split_into_batches__(self, training_set, batch_size):
         sample_batches = np.split(training_set[0], range(batch_size, len(training_set[0]), batch_size))
@@ -61,8 +61,10 @@ class NeuralNetwork(object):
         return outputs
 
     def __train_batch__(self, batch, learning_rate):
-        weights_adjustements = [None for i in range(self.no_layers)]
-        bias_adjustments = [None for i in range(self.no_layers)]
+        # weights_adjustements = np.array([None for i in range(self.no_layers)])
+        # bias_adjustments = np.array([None for i in range(self.no_layers)])
+        weights_adjustements = np.copy(self.weights)
+        bias_adjustments = np.copy(self.biases)
         for i, (sample, target) in enumerate(zip(*batch)):
             self.errors = []
 
@@ -87,28 +89,32 @@ class NeuralNetwork(object):
 
         return weights_adjustements, bias_adjustments
 
-    def train(self, training_set, valid_set, learning_rate, no_iterations, batch_size, ):
+    def train(self, training_set, valid_set, learning_rate, no_iterations, batch_size, l, friction):
 
         errors = []
+        n = len(training_set[0])
 
         for i in range(no_iterations):
+            start = timer()
             batches = self.__split_into_batches__(training_set, batch_size)
 
+            last_adjust = None
             for batch in batches:
                 weight_adjustements, bias_adjustements = self.__train_batch__(batch, learning_rate)
-                for j, (w, adjust) in enumerate(zip(self.weights, weight_adjustements)):
-                    self.weights[j] = w - (learning_rate / batch_size) * adjust
 
-                for j, (b, adjust) in enumerate(zip(self.biases, bias_adjustements)):
-                    self.biases[j] = b - (learning_rate / batch_size) * adjust
+                if last_adjust is not None:
+                    weight_adjustements = friction * last_adjust - (learning_rate / batch_size) * weight_adjustements
+                else:
+                    weight_adjustements = (learning_rate / batch_size) * weight_adjustements
+                last_adjust = np.copy(weight_adjustements)
 
-            error = self.__cross_entropy_error__(training_set)
-            print(error)
-            errors.append(error)
-            plt.ylim(0, 1)
-            plt.xlim(0, 10)
-            plt.plot(errors)
-            plt.show()
+                self.weights = (1 - learning_rate * l / n) * self.weights + weight_adjustements
+                self.biases = self.biases - (learning_rate / batch_size) * bias_adjustements
+
+            end = timer()
+            print("End of iteration %d which took %.2f seconds" % (i, end - start))
+            print("Cross entropy error: %f" % self.__cross_entropy_error__(training_set))
+            print("Validation accuracy: %f" % self.test(valid_set))
 
     def test(self, test_set):
         right = 0
@@ -117,4 +123,4 @@ class NeuralNetwork(object):
             prediction = np.argmax(outputs[-1])
             if prediction == target:
                 right += 1
-        print(((1.0 * right) / (1.0 * len(test_set[0]))) * 100)
+        return ((1.0 * right) / (1.0 * len(test_set[0]))) * 100
