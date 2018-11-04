@@ -7,34 +7,43 @@ from classifier import Classifier
 MNIST_URL = "http://deeplearning.net/data/mnist/mnist.pkl.gz"
 LOCAL_DATASET_PATH = "../data/mnist.pkl.gz"
 
+
 def shuffle(data):
     zipped_data = zip(*data)
     np.random.shuffle(zipped_data)
 
     return zip(*zipped_data)
 
-def get_dataset():
-    """Downloads the archive with the dataset if not present at the specified path.
-       Opens the archive and returns training set, validation set and testing set as a tuple
-    """
 
-    if not os.path.isfile(LOCAL_DATASET_PATH) or not os.access(LOCAL_DATASET_PATH, os.R_OK):
-        wget.download(MNIST_URL, LOCAL_DATASET_PATH)
+def translate_data(data):
+    temp = []
+    for value in data[1]:
+        t = np.zeros(10)
+        t[value] = 1
+        temp.append(t)
 
-    f = gzip.open(LOCAL_DATASET_PATH, 'rb')
+    return np.reshape(data[0], newshape=(len(data[0]), 784, 1)), np.reshape(np.array(temp),
+                                                                            newshape=(len(data[1]), 10, 1))
+
+
+def read_data():
+    f = gzip.open('../../data/mnist.pkl.gz', 'rb')
     train_set, valid_set, test_set = cPickle.load(f)
     f.close()
-         
-    return shuffle(train_set), valid_set, test_set
+
+    return translate_data(train_set), translate_data(valid_set), translate_data(test_set)
+
 
 def save(model_name, classifier):
     now = datetime.datetime.now()
     data = np.array([])
-    
-    with open(os.path.join("models", model_name + "-" + str(now.day) + "-" + str(now.hour) + "-" + str(now.minute)), 'wb') as output:
+
+    with open(os.path.join("models", model_name + "-" + str(now.day) + "-" + str(now.hour) + "-" + str(now.minute)),
+              'wb') as output:
         for perceptron in classifier.perceptrons:
             data = np.append(data, [perceptron.weights, perceptron.bias])
         cPickle.dump(data, output, cPickle.HIGHEST_PROTOCOL)
+
 
 def load(file_name):
     classifier = Classifier()
@@ -43,6 +52,6 @@ def load(file_name):
         i = 0
         for perceptron in classifier.perceptrons:
             perceptron.weights = data[i]
-            perceptron.bias = data[i+1]
+            perceptron.bias = data[i + 1]
             i += 2
     return classifier
