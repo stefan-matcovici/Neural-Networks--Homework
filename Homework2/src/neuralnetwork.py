@@ -61,10 +61,8 @@ class NeuralNetwork(object):
         return outputs
 
     def __train_batch__(self, batch, learning_rate):
-        # weights_adjustements = np.array([None for i in range(self.no_layers)])
-        # bias_adjustments = np.array([None for i in range(self.no_layers)])
-        weights_adjustements = np.copy(self.weights)
-        bias_adjustments = np.copy(self.biases)
+        weights_adjustements = np.array([np.zeros(shape=w.shape) for w in self.weights])
+        bias_adjustments = np.array([np.zeros(shape=b.shape) for b in self.biases])
         for i, (sample, target) in enumerate(zip(*batch)):
             self.errors = []
 
@@ -79,19 +77,13 @@ class NeuralNetwork(object):
                 else:
                     error = self.__sigmoid_derivative__(y) * np.transpose(np.dot(error.T, self.weights[layer]))
 
-                if i == 0:
-                    # first pass, initialize adjustements
-                    weights_adjustements[layer - 1] = np.dot(error, outputs[layer - 1].T)
-                    bias_adjustments[layer - 1] = np.copy(error)
-                else:
-                    weights_adjustements[layer - 1] += np.dot(error, outputs[layer - 1].T)
-                    bias_adjustments[layer - 1] += error
+                weights_adjustements[layer - 1] += np.dot(error, outputs[layer - 1].T)
+                bias_adjustments[layer - 1] += error
 
         return weights_adjustements, bias_adjustments
 
     def train(self, training_set, valid_set, learning_rate, no_iterations, batch_size, l, friction):
 
-        errors = []
         n = len(training_set[0])
 
         for i in range(no_iterations):
