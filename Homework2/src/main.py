@@ -1,15 +1,9 @@
-import cPickle, gzip, os, sys
-import numpy as np
-import wget
-import scipy.misc
-import matplotlib.pyplot as plt
-
-import logging
 import argparse
-import math
+import logging
+import sys
 
-from repository import get_dataset
 from neuralnetwork import NeuralNetwork
+from repository import get_dataset
 
 root = logging.getLogger()
 root.setLevel(logging.DEBUG)
