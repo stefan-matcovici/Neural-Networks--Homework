@@ -2,27 +2,27 @@ import argparse
 import sys
 
 import keras
-
-import os
-
 import numpy as np
 from IPython.display import clear_output
-from keras import Input, Model
-from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
-from keras.layers import Dropout, Dense, regularizers
-from keras.optimizers import SGD, Adam
-import process_data
+from keras import Sequential
+from keras.callbacks import ModelCheckpoint, EarlyStopping, LearningRateScheduler
+from keras.layers import Dropout, Dense
+from keras.optimizers import SGD
 from matplotlib import pyplot as plt
+from mnist import MNIST
+from sklearn.utils import class_weight
 
-import seaborn as sns
 
-PREPROCESSED_DATA = "processed_data"
+def load_full_training_data(directory):
+    emnist_data = MNIST(path=directory, return_type='numpy')
+    return emnist_data.load_training()
 
-TRAIN_DATA_X = os.path.join(PREPROCESSED_DATA, "x_full_train.npy")
-TRAIN_DATA_Y = os.path.join(PREPROCESSED_DATA, "y_full_train.npy")
 
-TEST_DATA_X = os.path.join(PREPROCESSED_DATA, "x_full_test.npy")
-TEST_DATA_Y = os.path.join(PREPROCESSED_DATA, "y_full_test.npy")
+codes = np.eye(47)
+
+
+def transform_labels(y):
+    return codes[np.array(y, dtype="int")]
 
 
 class PlotLosses(keras.callbacks.Callback):
@@ -49,73 +49,74 @@ class PlotLosses(keras.callbacks.Callback):
         plt.legend()
         plt.show()
 
-
 plot_losses = PlotLosses()
 
 
-def plot_distribution(data):
-    sns.countplot(data)
-    plt.show()
+def preprocess(tensor_input):
+    return tensor_input / 255.0
+
+def schedule(epoch):
+    rest = epoch % 20
+    cat = epoch / 20
+    return 0.9 * (1 / (cat + 1)) * np.cos((rest / 20) * (np.pi / 2))
+
+
+def get_model():
+    print("Build nn..")
+
+    model = Sequential()
+    # model.add(Reshape((784,), input_shape=(28, 28)))
+    # model.add(Lambda(preprocess, input_shape=(784, ), output_shape=(784,)))
+    model.add(Dense(500, activation='relu', input_shape=(784, )))
+    model.add(Dropout(0.4))
+    model.add(Dense(500, activation='relu'))
+    model.add(Dense(94, activation='relu'))
+    model.add(Dense(47, activation='softmax'))
+
+    print(model.summary())
+    optimizer2 = SGD()
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=optimizer2,
+                  metrics=['accuracy'])
+    print("Done building nn..")
+
+    return model
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='Train dense neural network to recognize handwritten digits and letters.')
-    parser.add_argument('-d', '--data', help='folder with full data')
-    parser.add_argument('-npy', '--numpy-data', help='train using preprocessed data saved in numpy arrays')
+    parser.add_argument('-td', '--train-data', help='folder with full train data')
 
     parse_result = parser.parse_args(sys.argv[1:])
 
     print("Loading training data..")
 
-    if parse_result.data is not None:
-        x_train, y_train = process_data.load_full_training_data(parse_result.data)
-        x_test, y_test = process_data.load_full_test_data(parse_result.data)
+    x_train, y_train = load_full_training_data(parse_result.train_data)
+    x_train = x_train.astype("float32") / 255.0
+    print("Done loading training and test data..")
 
-        print("Done loading training data..")
+    print("Preprocessing data..")
 
-        print("Preprocessing data..")
-        x_train = np.apply_along_axis(process_data.rotate, 1, x_train.astype("float32")) / 255
-        x_train = np.apply_along_axis(process_data.zoom, 1, x_train.astype("float32"))
-
-
-    else:
-        x_train, y_train = process_data.load_full_numpy_arrays("train", parse_result.numpy_data)
-        x_test, y_test = process_data.load_full_numpy_arrays("test", parse_result.numpy_data)
-        print("Done loading training data..")
-        print("Preprocessing data..")
-
-    y_test = process_data.transform_labels(y_test)
-    y_train = process_data.transform_labels(y_train)
+    class_weights = class_weight.compute_class_weight('balanced', np.unique(y_train), y_train)
+    y_train = transform_labels(y_train)
 
     print("Done preprocessing data..")
 
-    print("Build nn..")
-    input_layer = Input(shape=(784,))
-    dropout_1 = Dropout(0.6)(input_layer)
-    dense_2 = Dense(1024, activation='relu')(dropout_1)
-    dropout_2 = Dropout(0.6)(dense_2)
-    output_layer = Dense(47, activation='softmax')(dropout_2)
-    model = Model(inputs=input_layer, outputs=output_layer)
-
-    print(model.summary())
-    model.compile(loss='categorical_crossentropy',  # using the cross-entropy loss function
-                  optimizer="adam",
-                  metrics=['accuracy'])  # reporting the accuracy
-    checkpointer = ModelCheckpoint('model-emnist-nn.h5', verbose=1, save_best_only=True)
-    earlystopper = EarlyStopping(patience=3, verbose=1)
-    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
-                                  patience=3, min_lr=0.001)
-    print("Done building nn..")
-
     print("Train..")
-    history = model.fit(x_train, y_train,  # Train the model using the training set...
-                        batch_size=512, epochs=20,
-                        verbose=1, validation_split=0.1,
-                        callbacks=[earlystopper, checkpointer, reduce_lr,
-                                   plot_losses])  # ...holding out 10% of the data for validation
-    print("Done training..")
 
-    print("Test..")
-    print(model.evaluate(x_test, y_test))
-    print("Done testing..")
+    model = get_model()
+    checkpointer = ModelCheckpoint('model.h5', verbose=1, save_best_only=True)
+    earlystopper = EarlyStopping(patience=5, verbose=1)
+    lr_scheduler = LearningRateScheduler(schedule, verbose=1)
+    model.fit(x_train,
+              y_train,
+              batch_size=128,
+              epochs=200,
+              verbose=1,
+              validation_split=0.1,
+              shuffle=True,
+              class_weight=class_weights,
+              callbacks=[checkpointer, plot_losses, lr_scheduler])
+
+    print("Done training..")
